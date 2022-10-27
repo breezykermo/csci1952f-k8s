@@ -1,0 +1,10 @@
+---
+apiVersion: getambassador.io/v3alpha1
+kind: Mapping
+metadata:
+  name: online-boutique-backend
+  namespace: default
+spec:
+  hostname: "*"
+  prefix: /
+  service: frontend-external
