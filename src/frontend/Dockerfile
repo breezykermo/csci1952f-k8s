@@ -26,13 +26,37 @@ COPY . .
 ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/frontend .
 
-FROM alpine:3.17.0@sha256:8914eb54f968791faf6a8638949e480fef81e697984fba772b3976835194c6d4 as release
+FROM alpine:3.16.2 as torbuilder
+WORKDIR /arti
+RUN apk add --upgrade git curl openssl libressl-dev alpine-sdk
+
+## Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > install_rust
+RUN chmod +x install_rust
+RUN ./install_rust -y
+
+## Arti
+RUN git clone https://gitlab.torproject.org/tpo/core/arti
+WORKDIR /arti/arti
+# NOTE: see https://gitlab.torproject.org/tpo/core/arti/-/issues/571 for
+# rationale behind the next command
+RUN apk update && \
+  apk add alpine-sdk sqlite-dev openssl-dev perl && \
+  ~/.cargo/bin/cargo install --features static arti
+
+FROM alpine:3.16.2 as release
 RUN apk add --no-cache ca-certificates \
     busybox-extras net-tools bind-tools
 WORKDIR /src
 COPY --from=builder /go/bin/frontend /src/server
 COPY ./templates ./templates
 COPY ./static ./static
+
+# Our arti binary.
+# NOTE: we manually built the image "arti.local/base" by running
+#       `docker build -t arti.local/base .` inside the directory
+#       emissary/docker/base-arti.
+COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
 
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
 # Default behavior - a failure prints a stack trace for the current goroutine.

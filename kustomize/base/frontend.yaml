@@ -42,7 +42,8 @@ spec:
                 - all
             privileged: false
             readOnlyRootFilesystem: true
-          image: gcr.io/google-samples/microservices-demo/frontend:v0.5.0
+          # image: gcr.io/google-samples/microservices-demo/frontend:v0.4.1
+          image: frontend-local
           ports:
           - containerPort: 8080
           readinessProbe:
@@ -79,8 +80,8 @@ spec:
           - name: AD_SERVICE_ADDR
             value: "adservice:9555"
           # # ENV_PLATFORM: One of: local, gcp, aws, azure, onprem, alibaba
-          # # When not set, defaults to "local" unless running in GKE, otherwies auto-sets to gcp 
-          # - name: ENV_PLATFORM 
+          # # When not set, defaults to "local" unless running in GKE, otherwies auto-sets to gcp
+          # - name: ENV_PLATFORM
           #   value: "aws"
           - name: ENABLE_PROFILER
             value: "0"
@@ -93,6 +94,7 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+      restartPolicy: Never
 ---
 apiVersion: v1
 kind: Service
