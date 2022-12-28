@@ -26,6 +26,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	// "golang.org/x/net/proxy"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -81,20 +84,11 @@ type frontendServer struct {
 
 	collectorAddr string
 	collectorConn *grpc.ClientConn
-}
 
-func torMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	artiProxyAddr string
+	artiProxyConn http.Transport
 
-		// fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-        // Call the next handler, which can be another middleware in the chain, or the final handler.
-        next.ServeHTTP(w, r)
 
-		// TODO last, after all the handlers...
-        // TODO if request is directed for client, proxy request via SOCKS..
-		// log.Print("MIDDLEWARE: ")
-        // log.Println(r.Header)
-    })
 }
 
 func main() {
@@ -148,6 +142,10 @@ func main() {
 	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
+	if os.Getenv("USES_TOR_MACHINERY") == "1" {
+
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
@@ -160,7 +158,7 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
 	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
-	// r.Use(torMiddleware)
+	r.HandleFunc("/callout", svc.calloutHandler).Methods(http.MethodGet)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler} // add logging

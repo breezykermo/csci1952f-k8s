@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
 )
@@ -414,6 +415,21 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 		http.SetCookie(w, c)
 	}
 	w.Header().Set("Location", "/")
+	writeHeader(w, http.StatusFound)
+}
+
+func (fe *frontendServer) calloutHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	log.Debug("calling out to external service")
+
+	requestURL := fmt.Sprintf("https://lachlankermode.com")
+	res, err := http.Get(requestURL)
+	if err != nil {
+		fmt.Printf("error making http request: %s\n", err)
+		os.Exit(1)
+	}
+	log.Info("client: status code: %d\n", res.StatusCode)
+
 	writeHeader(w, http.StatusFound)
 }
 
