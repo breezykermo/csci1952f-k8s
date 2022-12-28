@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -80,6 +81,8 @@ type frontendServer struct {
 
 	collectorAddr string
 	collectorConn *grpc.ClientConn
+
+	usesTorMachinery bool
 }
 
 func main() {
@@ -124,6 +127,8 @@ func main() {
 	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
 	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
 	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
+	// by default will be false, true when env variable is set to anything
+	svc.usesTorMachinery = (os.Getenv("USES_TOR_MACHINERY") == "")
 
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -153,8 +158,10 @@ func main() {
 		handler = otelhttp.NewHandler(handler, "frontend") // add OTel tracing
 	}
 
+	exec.Command("/usr/bin/arti", "proxy", "-l", "debug", "-p", "9150")
+
 	log.Infof("starting server on " + addr + ":" + srvPort)
-	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
+	// log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 func initStats(log logrus.FieldLogger) {
 	// TODO(arbrown) Implement OpenTelemtry stats

@@ -64,4 +64,5 @@ COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
 ENV GOTRACEBACK=single
 
 EXPOSE 8080
-ENTRYPOINT ["/src/server"]
+ENTRYPOINT ["/bin/sh"]
+# ENTRYPOINT ["/src/server"]
