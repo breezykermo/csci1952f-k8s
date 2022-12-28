@@ -83,6 +83,20 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 }
 
+func torMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+        // Call the next handler, which can be another middleware in the chain, or the final handler.
+        next.ServeHTTP(w, r)
+
+		// TODO last, after all the handlers...
+        // TODO if request is directed for client, proxy request via SOCKS..
+		// log.Print("MIDDLEWARE: ")
+        // log.Println(r.Header)
+    })
+}
+
 func main() {
 	ctx := context.Background()
 	log := logrus.New()
@@ -146,6 +160,7 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
 	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+	// r.Use(torMiddleware)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler} // add logging
@@ -157,6 +172,7 @@ func main() {
 	if os.Getenv("USES_TOR_MACHINERY") == "1" {
 		arti_cmd := exec.Command("su", "-c", "./run_arti", "arti")
 		go arti_cmd.Run()
+		log.Infof("arti process running.")
 	}
 
 	log.Infof("starting server on " + addr + ":" + srvPort)
