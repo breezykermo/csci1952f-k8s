@@ -49,6 +49,7 @@ RUN apk add --no-cache ca-certificates \
     busybox-extras net-tools bind-tools
 WORKDIR /src
 COPY --from=builder /go/bin/frontend /src/server
+COPY --from=builder /src/run_arti.sh /src/run_arti
 COPY ./templates ./templates
 COPY ./static ./static
 
@@ -62,6 +63,8 @@ COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
 # Default behavior - a failure prints a stack trace for the current goroutine.
 # See https://golang.org/pkg/runtime/
 ENV GOTRACEBACK=single
+
+RUN adduser -D -g "" arti
 
 EXPOSE 8080
 ENTRYPOINT ["/bin/sh"]
