@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	// "golang.org/x/net/proxy"
+	"golang.org/x/net/proxy"
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -85,10 +86,8 @@ type frontendServer struct {
 	collectorAddr string
 	collectorConn *grpc.ClientConn
 
-	artiProxyAddr string
-	artiProxyConn http.Transport
-
-
+	calloutProxyAddr string
+	calloutClient *http.Client
 }
 
 func main() {
@@ -133,6 +132,7 @@ func main() {
 	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
 	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
 	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
+	svc.calloutProxyAddr = "0.0.0.0:9150"
 
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -143,8 +143,31 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	if os.Getenv("USES_TOR_MACHINERY") == "1" {
+		dialer, err := proxy.SOCKS5("tcp", svc.calloutProxyAddr, nil, proxy.Direct)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
+			os.Exit(1)
+		}
+		fmt.Println(dialer)
 
+		dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {
+			// do anything with ctx
+			fmt.Println("context: ", ctx)
+			fmt.Println("network: ", network)
+			fmt.Println("address: ", address)
+
+			return dialer.Dial(network, address)
+		}
+
+		// setup a http client
+		httpTransport := &http.Transport{
+			DialContext: dialContext,
+		}
+		svc.calloutClient = &http.Client{Transport: httpTransport}
+	} else {
+		svc.calloutClient = &http.Client{}
 	}
+
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
@@ -169,7 +192,15 @@ func main() {
 
 	if os.Getenv("USES_TOR_MACHINERY") == "1" {
 		arti_cmd := exec.Command("su", "-c", "./run_arti", "arti")
-		go arti_cmd.Run()
+		go func() {
+			outfile, err := os.Create("./arti_logs.txt")
+			if err != nil {
+				panic(err)
+			}
+			defer outfile.Close()
+			arti_cmd.Stdout = outfile
+			arti_cmd.Run()
+		}()
 		log.Infof("arti process running.")
 	}
 

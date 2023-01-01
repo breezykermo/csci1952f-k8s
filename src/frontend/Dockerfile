@@ -36,7 +36,7 @@ RUN chmod +x install_rust
 RUN ./install_rust -y
 
 ## Arti
-RUN git clone https://gitlab.torproject.org/tpo/core/arti
+RUN git clone -b hack/metric-logging --single-branch https://gitlab.torproject.org/breezykermo/arti.git
 WORKDIR /arti/arti
 # NOTE: see https://gitlab.torproject.org/tpo/core/arti/-/issues/571 for
 # rationale behind the next command

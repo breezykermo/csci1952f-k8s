@@ -24,6 +24,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"io/ioutil"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -420,15 +421,33 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 
 func (fe *frontendServer) calloutHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	now := time.Now();
 	log.Debug("calling out to external service")
 
-	requestURL := fmt.Sprintf("https://lachlankermode.com")
-	res, err := http.Get(requestURL)
+	requestURL := fmt.Sprintf("http://www.example.com")
+
+	// create a request
+	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
-		fmt.Printf("error making http request: %s\n", err)
-		os.Exit(1)
+		log.Warn("can't create request:", err)
+		return
 	}
-	log.Info("client: status code: %d\n", res.StatusCode)
+
+	resp, err := fe.calloutClient.Do(req)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "cannot make get request: ", err)
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Warn("cannot read response body: ", err)
+	}
+	elapsed := time.Since(now);
+	fmt.Println("received response -> ", body)
+	fmt.Println("METRIC(lox):", elapsed);
+
 
 	writeHeader(w, http.StatusFound)
 }
