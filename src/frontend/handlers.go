@@ -54,24 +54,12 @@ var (
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
 func writeTemplate(w http.ResponseWriter, name string, t map[string]interface{}) {
-	log.Warn("WRITING TEMPLATE")
-
-	if os.Getenv("USES_TOR_MACHINERY") == "1" {
-		// TODO go to tor via SOCKS
-	}
-
 	if err := templates.ExecuteTemplate(w, name, t); err != nil {
 		log.Error(err)
 	}
 }
 
 func writeHeader(w http.ResponseWriter, code int) {
-	log.Warn("WRITING HEADER")
-
-	if os.Getenv("USES_TOR_MACHINERY") == "1" {
-		// TODO go to tor via SOCKS
-	}
-
 	w.WriteHeader(code)
 }
 
