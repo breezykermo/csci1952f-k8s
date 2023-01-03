@@ -1,0 +1,21 @@
+#!/usr/bin/env fish
+: '
+Runs `calc_offset_in_millis` a number of times and averages the result.
+'
+
+argparse 'n/num=' -- $argv
+
+if set --query _flag_n
+  echo "Running "$_flag_n" experiments and averaging.."
+  set acc 0
+  for exp in (seq $_flag_n)
+    set result (./calc_offset_in_millis 2>&1 | tail -1 | string match -r 'machinery time: (.*) ms' | tail -1 | string trim)
+    echo "Experiment" $exp":" $result"ms"
+    set acc (math $acc + $result)
+  end
+  echo ""
+  echo "Final result:"
+  echo "Average of" (math $acc / $_flag_n)"ms."
+else
+  echo "Set '-n' to the number of times you want to run the test."
+end
