@@ -22,11 +22,14 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 
+# "tor" or "no_tor"
+ARG BUILD_ENV=""
+
 # Skaffold passes in debug-oriented compiler flags
 ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/frontend .
 
-FROM alpine:3.16.2 as torbuilder
+FROM alpine:3.16.2 as torbuilder_tor
 WORKDIR /arti
 RUN apk add --upgrade git curl openssl libressl-dev alpine-sdk
 
@@ -44,6 +47,10 @@ RUN apk update && \
   apk add alpine-sdk sqlite-dev openssl-dev perl && \
   ~/.cargo/bin/cargo install --features static arti
 
+FROM alpine:3.16.2 as torbuilder_no_tor
+RUN mkdir -p /root/.cargo/bin
+RUN touch /root/.cargo/bin/arti
+
 FROM alpine:3.16.2 as release
 RUN apk add --no-cache ca-certificates \
     busybox-extras net-tools bind-tools
@@ -53,11 +60,8 @@ COPY --from=builder /src/run_arti.sh /src/run_arti
 COPY ./templates ./templates
 COPY ./static ./static
 
-# Our arti binary.
-# NOTE: we manually built the image "arti.local/base" by running
-#       `docker build -t arti.local/base .` inside the directory
-#       emissary/docker/base-arti.
-COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
+# Our arti binary, or an empty file.
+COPY --from=torbuilder_${BUILD_ENV} /root/.cargo/bin/arti /usr/bin/arti
 
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
 # Default behavior - a failure prints a stack trace for the current goroutine.
