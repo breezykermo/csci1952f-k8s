@@ -67,5 +67,4 @@ ENV GOTRACEBACK=single
 RUN adduser -D -g "" arti
 
 EXPOSE 8080
-ENTRYPOINT ["/bin/sh"]
-# ENTRYPOINT ["/src/server"]
+ENTRYPOINT ["/src/server"]
