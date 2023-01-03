@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# "tor" or "no_tor"
+ARG BUILD_ENV
+
 FROM golang:1.19.4-alpine@sha256:f33331e12ca70192c0dbab2d0a74a52e1dd344221507d88aaea605b0219a212f as builder
+
 RUN apk add --no-cache ca-certificates git
 RUN apk add build-base
 WORKDIR /src
@@ -21,9 +25,6 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-
-# "tor" or "no_tor"
-ARG BUILD_ENV=""
 
 # Skaffold passes in debug-oriented compiler flags
 ARG SKAFFOLD_GO_GCFLAGS
@@ -51,7 +52,11 @@ FROM alpine:3.16.2 as torbuilder_no_tor
 RUN mkdir -p /root/.cargo/bin
 RUN touch /root/.cargo/bin/arti
 
+FROM torbuilder_${BUILD_ENV} as torbuilder
+
 FROM alpine:3.16.2 as release
+
+
 RUN apk add --no-cache ca-certificates \
     busybox-extras net-tools bind-tools
 WORKDIR /src
@@ -61,7 +66,7 @@ COPY ./templates ./templates
 COPY ./static ./static
 
 # Our arti binary, or an empty file.
-COPY --from=torbuilder_${BUILD_ENV} /root/.cargo/bin/arti /usr/bin/arti
+COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
 
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
 # Default behavior - a failure prints a stack trace for the current goroutine.
