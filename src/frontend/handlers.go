@@ -434,8 +434,10 @@ func (fe *frontendServer) calloutHandler(w http.ResponseWriter, r *http.Request)
 	}
 	elapsed := time.Since(now);
 	fmt.Println("received response -> ", body)
-	fmt.Println("METRIC(lox):", elapsed);
 
+	if os.Getenv("TRACING_BUILD_ENV") == "no_tor" {
+		fmt.Println("METRIC(lox):", elapsed);
+	}
 
 	writeHeader(w, http.StatusFound)
 }

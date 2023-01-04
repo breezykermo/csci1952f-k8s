@@ -142,7 +142,7 @@ func main() {
 	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
-	if os.Getenv("USES_TOR_MACHINERY") == "1" {
+	if os.Getenv("TRACING_BUILD_ENV") == "tor" {
 		dialer, err := proxy.SOCKS5("tcp", svc.calloutProxyAddr, nil, proxy.Direct)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
@@ -190,7 +190,7 @@ func main() {
 		handler = otelhttp.NewHandler(handler, "frontend") // add OTel tracing
 	}
 
-	if os.Getenv("USES_TOR_MACHINERY") == "1" {
+	if os.Getenv("TRACING_BUILD_ENV") == "tor" {
 		arti_cmd := exec.Command("su", "-c", "./run_arti", "arti")
 		go func() {
 			outfile, err := os.Create("./arti_logs.txt")

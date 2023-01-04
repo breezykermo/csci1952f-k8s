@@ -74,6 +74,9 @@ COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
 ENV GOTRACEBACK=single
 
 RUN adduser -D -g "" arti
+RUN mkdir -p /home/arti/.local/share/arti
+
+ENV TRACING_BUILD_ENV ${BUILD_ENV}
 
 EXPOSE 8080
 ENTRYPOINT ["/src/server"]

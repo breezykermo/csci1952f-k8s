@@ -45,7 +45,7 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
           # image: gcr.io/google-samples/microservices-demo/frontend:v0.5.0
-          image: frontend-local
+          image: frontend-local-tor
           ports:
           - containerPort: 8080
           readinessProbe:
