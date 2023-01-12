@@ -24,9 +24,27 @@ patchesStrategicMerge:
   spec:
     template:
       spec:
+        securityContext:
+          runAsNonRoot: false
+          # fsGroup: 666
         containers:
           - name: server
+            image: frontend-local-tor
             imagePullPolicy: IfNotPresent
             securityContext:
               readOnlyRootFilesystem: false
-            image: frontend-local-tor
+              privileged: true
+              allowPrivilegeEscalation: true
+              capabilities:
+                drop: []
+                add:
+                  - SYS_ADMIN
+
+            volumeMounts:
+            - mountPath: /home/arti/.local/share/arti
+              name: arti-data
+        volumes:
+        - name: arti-data
+          emptyDir: {}
+
+
