@@ -27,22 +27,40 @@ patchesStrategicMerge:
         securityContext:
           runAsNonRoot: false
           fsGroup: 1000
+          runAsUser: 1000
         containers:
           - name: server
             image: frontend-local-tor
             imagePullPolicy: IfNotPresent
             securityContext:
               readOnlyRootFilesystem: false
-              privileged: true
-              allowPrivilegeEscalation: true
-              capabilities:
-                drop: []
-                add:
-                  - SYS_ADMIN
-
+              # privileged: true
+              # allowPrivilegeEscalation: true
+              # capabilities:
+              #   drop: []
+              #   add:
+              #     - SYS_ADMIN
             volumeMounts:
             - mountPath: /home/arti/.local/share/arti
               name: arti-data
+
+        initContainers:
+          - name: take-arti-dir-ownership
+            image: frontend-local-tor
+            imagePullPolicy: IfNotPresent
+            # Give `arti` user (id 1000) permissions a mounted volume
+            securityContext:
+              runAsUser: 0
+              readOnlyRootFilesystem: false
+              privileged: true
+            command:
+            - chown
+            - arti:arti
+            - /home/arti/.local/share/arti
+            volumeMounts:
+            - name: arti-data
+              mountPath: /home/arti/.local/share/arti
+
         volumes:
         - name: arti-data
           emptyDir: {}

@@ -142,6 +142,7 @@ func main() {
 	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
+	fmt.Println("ENV: ", os.Getenv("TRACING_BUILD_ENV"))
 	if os.Getenv("TRACING_BUILD_ENV") == "tor" {
 		dialer, err := proxy.SOCKS5("tcp", svc.calloutProxyAddr, nil, proxy.Direct)
 		if err != nil {
