@@ -26,19 +26,19 @@ patchesStrategicMerge:
       spec:
         securityContext:
           runAsNonRoot: false
-          # fsGroup: 666
+          fsGroup: 1000
         containers:
           - name: server
             image: frontend-local-tor
             imagePullPolicy: IfNotPresent
             securityContext:
               readOnlyRootFilesystem: false
-              # privileged: true
-              # allowPrivilegeEscalation: true
-              # capabilities:
-              #   drop: []
-              #   add:
-              #     - SYS_ADMIN
+              privileged: true
+              allowPrivilegeEscalation: true
+              capabilities:
+                drop: []
+                add:
+                  - SYS_ADMIN
 
             volumeMounts:
             - mountPath: /home/arti/.local/share/arti
