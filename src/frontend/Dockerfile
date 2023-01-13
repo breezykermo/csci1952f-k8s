@@ -75,6 +75,7 @@ ENV GOTRACEBACK=single
 
 RUN adduser -D -g 1000 arti
 RUN mkdir -p /home/arti/.local/share/arti
+RUN chown arti: /home/arti/.local/share/arti
 
 ENV TRACING_BUILD_ENV ${BUILD_ENV}
 

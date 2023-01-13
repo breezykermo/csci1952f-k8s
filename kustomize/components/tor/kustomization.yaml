@@ -33,12 +33,12 @@ patchesStrategicMerge:
             imagePullPolicy: IfNotPresent
             securityContext:
               readOnlyRootFilesystem: false
-              privileged: true
-              allowPrivilegeEscalation: true
-              capabilities:
-                drop: []
-                add:
-                  - SYS_ADMIN
+              # privileged: true
+              # allowPrivilegeEscalation: true
+              # capabilities:
+              #   drop: []
+              #   add:
+              #     - SYS_ADMIN
 
             volumeMounts:
             - mountPath: /home/arti/.local/share/arti
@@ -47,4 +47,9 @@ patchesStrategicMerge:
         - name: arti-data
           emptyDir: {}
 
-
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: loadgenerator
+  $patch: delete

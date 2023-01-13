@@ -148,6 +148,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
 			os.Exit(1)
 		}
+		fmt.Println("Configured to use Tor proxy.")
 		fmt.Println(dialer)
 
 		dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {

@@ -4,5 +4,6 @@ then
     echo "No arti binary, running without Tor."
     exit
 fi
+chmod o-w /home/arti/.local/share/arti
 
 /usr/bin/arti -l info proxy -p 9150
