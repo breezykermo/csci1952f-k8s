@@ -55,6 +55,7 @@ RUN touch /root/.cargo/bin/arti
 FROM torbuilder_${BUILD_ENV} as torbuilder
 
 FROM alpine:3.16.2 as release
+ARG BUILD_ENV
 
 
 RUN apk add --no-cache ca-certificates \

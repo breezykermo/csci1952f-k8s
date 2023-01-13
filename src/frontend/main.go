@@ -193,9 +193,9 @@ func main() {
 	}
 
 	if os.Getenv("TRACING_BUILD_ENV") == "tor" {
-		arti_cmd := exec.Command("su", "-c", "./run_arti", "arti")
+		arti_cmd := exec.Command("./run_arti")
 		go func() {
-			outfile, err := os.Create("./arti_logs.txt")
+			outfile, err := os.Create("/home/arti/.local/share/arti/arti_logs.txt")
 			if err != nil {
 				panic(err)
 			}
