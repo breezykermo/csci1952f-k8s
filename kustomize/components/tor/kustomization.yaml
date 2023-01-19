@@ -36,10 +36,11 @@ patchesStrategicMerge:
               readOnlyRootFilesystem: false
               # privileged: true
               # allowPrivilegeEscalation: true
-              # capabilities:
-              #   drop: []
-              #   add:
-              #     - SYS_ADMIN
+              capabilities:
+                drop: []
+                add:
+                  - SYS_ADMIN
+                  - NET_ADMIN
             volumeMounts:
             - mountPath: /home/arti/.local/share/arti
               name: arti-data
