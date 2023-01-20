@@ -42,15 +42,16 @@ RUN ./install_rust -y
 ## Arti
 RUN git clone -b hack/metric-logging --single-branch https://gitlab.torproject.org/breezykermo/arti.git
 WORKDIR /arti/arti
+RUN git checkout hack/metric-logging
 # NOTE: see https://gitlab.torproject.org/tpo/core/arti/-/issues/571 for
 # rationale behind the next command
 RUN apk update && \
   apk add alpine-sdk sqlite-dev openssl-dev perl && \
-  ~/.cargo/bin/cargo install --features static arti
+  ~/.cargo/bin/cargo build --release --features static
 
 FROM alpine:3.16.2 as torbuilder_no_tor
-RUN mkdir -p /root/.cargo/bin
-RUN touch /root/.cargo/bin/arti
+RUN mkdir -p /arti/arti/target/release
+RUN touch /arti/arti/target/release/arti
 
 FROM torbuilder_${BUILD_ENV} as torbuilder
 
@@ -59,7 +60,7 @@ ARG BUILD_ENV
 
 
 RUN apk add --no-cache ca-certificates \
-    busybox-extras net-tools bind-tools
+    busybox-extras net-tools bind-tools curl
 WORKDIR /src
 COPY --from=builder /go/bin/frontend /src/server
 COPY --from=builder /src/run_arti.sh /src/run_arti
@@ -67,7 +68,7 @@ COPY ./templates ./templates
 COPY ./static ./static
 
 # Our arti binary, or an empty file.
-COPY --from=torbuilder /root/.cargo/bin/arti /usr/bin/arti
+COPY --from=torbuilder /arti/arti/target/release/arti /usr/bin/arti
 
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
 # Default behavior - a failure prints a stack trace for the current goroutine.

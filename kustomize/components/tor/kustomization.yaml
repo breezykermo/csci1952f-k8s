@@ -30,7 +30,8 @@ patchesStrategicMerge:
           runAsUser: 1000
         containers:
           - name: server
-            image: frontend-local-tor
+            # image: frontend-local-tor
+            image: frontend-local-no-tor
             imagePullPolicy: IfNotPresent
             securityContext:
               readOnlyRootFilesystem: false
@@ -47,7 +48,8 @@ patchesStrategicMerge:
 
         initContainers:
           - name: take-arti-dir-ownership
-            image: frontend-local-tor
+            # image: frontend-local-tor
+            image: frontend-local-no-tor
             imagePullPolicy: IfNotPresent
             # Give `arti` user (id 1000) permissions a mounted volume
             securityContext:

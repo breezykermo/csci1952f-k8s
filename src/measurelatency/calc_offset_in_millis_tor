@@ -21,8 +21,6 @@ echo $SERVER_URL
 
 # make the request and time it
 set START_TIME (date +%s%N)
-# curl http://192.168.49.2:31906/callout
-# curl http://172.17.255.255:32070/callout
 curl $SERVER_URL/callout
 set END_TIME (date +%s%N)
 
